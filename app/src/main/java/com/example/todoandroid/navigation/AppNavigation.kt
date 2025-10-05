@@ -1,0 +1,56 @@
+package com.example.todoandroid.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.todoandroid.ui.screens.LoginScreen
+import com.example.todoandroid.ui.screens.TodoScreen
+import com.example.todoandroid.ui.screens.UserProfileScreen
+
+@Composable
+fun AppNavigation(
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController()
+) {
+    NavHost(
+        navController = navController,
+        startDestination = "login",
+        modifier = modifier
+    ) {
+        composable("login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate("main") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable("main") {
+            TodoScreen(
+                onProfileClick = {
+                    navController.navigate("profile")
+                }
+            )
+        }
+
+        composable("profile") {
+            UserProfileScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("profile") {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+    }
+}
