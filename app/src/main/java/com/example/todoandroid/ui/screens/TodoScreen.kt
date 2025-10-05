@@ -46,6 +46,8 @@ fun TodoScreen(
     var showAddTaskDialog by remember { mutableStateOf(false) }
     var todoToDelete by remember { mutableStateOf<Todo?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditTaskDialog by remember { mutableStateOf(false) }
+    var todoToEdit by remember { mutableStateOf<Todo?>(value = null) }
 
     Scaffold(
         topBar = {
@@ -93,6 +95,10 @@ fun TodoScreen(
                 onDelete = { todo ->
                     todoToDelete = todo
                     showDeleteDialog = true
+                },
+                onEdit = { todo ->
+                    todoToEdit = todo
+                    showEditTaskDialog = true
                 }
             )
         }
@@ -106,6 +112,21 @@ fun TodoScreen(
             },
             onDismiss = {
                 showAddTaskDialog = false
+            }
+        )
+    }
+
+    if (showEditTaskDialog && todoToEdit != null) {
+        EditTaskDialog(
+            todo = todoToEdit!!,
+            onEdit = { newTitle ->
+                viewModel.editTodo(todoToEdit!!.id, newTitle)
+                showEditTaskDialog = false
+                todoToEdit = null
+            },
+            onDismiss = {
+                showDeleteDialog = false
+                todoToEdit = null
             }
         )
     }
@@ -131,6 +152,7 @@ fun TodoList(
     items: List<Todo>,
     onToggle: (Long) -> Unit,
     onDelete: (Todo) -> Unit,
+    onEdit: (Todo) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (items.isEmpty()) {
@@ -143,7 +165,7 @@ fun TodoList(
     }
     LazyColumn(modifier = modifier.fillMaxSize()) {
         items(items, key = { it.id }) { item ->
-            TodoRow(item = item, onToggle = onToggle, onDelete = onDelete)
+            TodoRow(item = item, onToggle = onToggle, onDelete = onDelete, onEdit = onEdit)
             Divider()
         }
     }
@@ -154,6 +176,7 @@ fun TodoRow(
     item: Todo,
     onToggle: (Long) -> Unit,
     onDelete: (Todo) -> Unit,
+    onEdit: (Todo) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -175,8 +198,14 @@ fun TodoRow(
                 }
             )
         }
-        TextButton(onClick = { onDelete(item) }) {
-            Text("Delete")
+
+        Row {
+            TextButton(onClick = { onEdit(item) }) {
+                Text("Edit")
+            }
+            TextButton(onClick = { onDelete(item) }) {
+                Text("Delete")
+            }
         }
     }
 }
@@ -253,6 +282,46 @@ fun DeleteConfirmationDialog(
                 onClick = onDismiss
             ) {
                 Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun EditTaskDialog(
+    todo: Todo,
+    onEdit: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var taskText by remember { mutableStateOf(todo.title) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Edit Task"
+            )
+        },
+        text = {
+            TextField(
+                value = taskText,
+                onValueChange = { taskText = it },
+                placeholder = { Text("Enter task description") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (taskText.isNotBlank() && taskText.trim() != todo.title) {
+                        onEdit(taskText.trim())
+                    } else {
+                        onDismiss()
+                    }
+                },
+                enabled = taskText.isNotBlank()
+            ) {
+                Text("Save")
             }
         }
     )
