@@ -9,9 +9,9 @@ import javax.inject.Inject
 interface TodoRepository {
     val todos: StateFlow<List<Todo>>
 
-    fun add(title: String)
+    fun add(title: String, category: String? = null)
 
-    fun edit(id: Long, newTitle: String)
+    fun edit(id: Long, newTitle: String, category: String? = null)
     fun toggle(id: Long)
     fun delete(id: Long)
 }
@@ -19,20 +19,21 @@ interface TodoRepository {
 class InMemoryTodoRepository @Inject constructor() : TodoRepository {
     private val _todos = MutableStateFlow<List<Todo>>(emptyList())
     override val todos: StateFlow<List<Todo>> = _todos.asStateFlow()
-    override fun add(title: String) {
+    override fun add(title: String, category: String?) {
         if (title.isBlank()) return
         val newItem = Todo(
             id = System.currentTimeMillis(),
             title = title.trim(),
-            completed = false
+            completed = false,
+            category = category
         )
         _todos.value = listOf(newItem) + _todos.value
     }
 
-    override fun edit(id: Long, newTitle: String) {
+    override fun edit(id: Long, newTitle: String, category: String?) {
         if (newTitle.isBlank()) return
         _todos.value = _todos.value.map { item ->
-            if (item.id == id) item.copy(title = newTitle.trim()) else item
+            if (item.id == id) item.copy(title = newTitle.trim(), category = category) else item
         }
     }
 

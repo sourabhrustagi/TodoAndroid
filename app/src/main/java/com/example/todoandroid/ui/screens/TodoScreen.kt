@@ -2,6 +2,7 @@ package com.example.todoandroid.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,7 +13,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
@@ -35,6 +40,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.todoandroid.model.Todo
+import com.example.todoandroid.ui.components.CategorySelectionComponent
+import com.example.todoandroid.utils.TaskCategories
+import com.example.todoandroid.utils.TaskCategory
 import com.example.todoandroid.viewmodel.TodoViewModel
 
 @Composable
@@ -106,8 +114,8 @@ fun TodoScreen(
 
     if (showAddTaskDialog) {
         AddTaskDialog(
-            onAdd = { title ->
-                viewModel.addTodo(title)
+            onAdd = { title, category ->
+                viewModel.addTodo(title, category)
                 showAddTaskDialog = false
             },
             onDismiss = {
@@ -119,8 +127,8 @@ fun TodoScreen(
     if (showEditTaskDialog && todoToEdit != null) {
         EditTaskDialog(
             todo = todoToEdit!!,
-            onEdit = { newTitle ->
-                viewModel.editTodo(todoToEdit!!.id, newTitle)
+            onEdit = { newTitle, category ->
+                viewModel.editTodo(todoToEdit!!.id, newTitle, category)
                 showEditTaskDialog = false
                 todoToEdit = null
             },
@@ -179,32 +187,71 @@ fun TodoRow(
     onEdit: (Todo) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
-            Checkbox(checked = item.completed, onCheckedChange = {
-                onToggle(item.id)
-            })
-            Text(
-                text = item.title,
-                style = if (item.completed) {
-                    MaterialTheme.typography.bodyLarge.copy(textDecoration = TextDecoration.LineThrough)
-                } else {
-                    MaterialTheme.typography.bodyLarge
+        Column(
+            modifier = Modifier.padding(12.dp),
+        ) {
+            Row(
+                modifier = modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(checked = item.completed, onCheckedChange = {
+                        onToggle(item.id)
+                    })
+                    Column {
+                        Text(
+                            text = item.title,
+                            style = if (item.completed) {
+                                MaterialTheme.typography.bodyLarge.copy(textDecoration = TextDecoration.LineThrough)
+                            } else {
+                                MaterialTheme.typography.bodyLarge
+                            }
+                        )
+                        if (item.category != null) {
+                            Row(
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                AssistChip(
+                                    onClick = {},
+                                    label = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            Text(TaskCategories.getCategoryIcon(item.category))
+                                            Text(TaskCategories.getCategoryDisplayName(item.category))
+                                        }
+                                    },
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = TaskCategories.getCategoryColor(item.category)
+                                            .copy(alpha = 0.3f),
+                                        labelColor = TaskCategories.getCategoryColor(item.category)
+                                    )
+                                )
+                            }
+                        }
+                    }
                 }
-            )
-        }
 
-        Row {
-            TextButton(onClick = { onEdit(item) }) {
-                Text("Edit")
-            }
-            TextButton(onClick = { onDelete(item) }) {
-                Text("Delete")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { onEdit(item) }) {
+                        Text("Edit")
+                    }
+                    TextButton(onClick = { onDelete(item) }) {
+                        Text("Delete")
+                    }
+                }
             }
         }
     }
@@ -212,10 +259,11 @@ fun TodoRow(
 
 @Composable
 fun AddTaskDialog(
-    onAdd: (String) -> Unit,
+    onAdd: (String, String?) -> Unit,
     onDismiss: () -> Unit
 ) {
     var taskText by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -223,18 +271,24 @@ fun AddTaskDialog(
             Text("Add New Task")
         },
         text = {
-            TextField(
-                value = taskText,
-                onValueChange = { taskText = it },
-                placeholder = { Text("Enter task description") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column {
+                TextField(
+                    value = taskText,
+                    onValueChange = { taskText = it },
+                    placeholder = { Text("Enter task description") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                CategorySelectionComponent(
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { selectedCategory = it }
+                )
+            }
         },
         confirmButton = {
             Button(
                 onClick = {
                     if (taskText.isNotBlank()) {
-                        onAdd(taskText.trim())
+                        onAdd(taskText.trim(), selectedCategory)
                         taskText = ""
                     }
                 },
@@ -290,11 +344,11 @@ fun DeleteConfirmationDialog(
 @Composable
 fun EditTaskDialog(
     todo: Todo,
-    onEdit: (String) -> Unit,
+    onEdit: (String, String?) -> Unit,
     onDismiss: () -> Unit
 ) {
     var taskText by remember { mutableStateOf(todo.title) }
-
+    var selectedCategory by remember { mutableStateOf(todo.category) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -303,18 +357,25 @@ fun EditTaskDialog(
             )
         },
         text = {
-            TextField(
-                value = taskText,
-                onValueChange = { taskText = it },
-                placeholder = { Text("Enter task description") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column {
+                TextField(
+                    value = taskText,
+                    onValueChange = { taskText = it },
+                    placeholder = { Text("Enter task description") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                CategorySelectionComponent(
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { selectedCategory = it }
+                )
+            }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (taskText.isNotBlank() && taskText.trim() != todo.title) {
-                        onEdit(taskText.trim())
+                    if (taskText.isNotBlank() && (taskText.trim() != todo.title || selectedCategory != todo.category)) {
+                        onEdit(taskText.trim(), selectedCategory)
                     } else {
                         onDismiss()
                     }
@@ -322,6 +383,13 @@ fun EditTaskDialog(
                 enabled = taskText.isNotBlank()
             ) {
                 Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text("Cancel")
             }
         }
     )

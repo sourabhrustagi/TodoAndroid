@@ -9,6 +9,7 @@ import com.example.todoandroid.domain.usecase.EditTodoUseCase
 import com.example.todoandroid.domain.usecase.GetTodoUseCase
 import com.example.todoandroid.domain.usecase.ToggleTodoUseCase
 import com.example.todoandroid.model.Todo
+import com.example.todoandroid.utils.TaskCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -24,15 +25,15 @@ class TodoViewModel @Inject constructor(
 ) : ViewModel() {
     val todos: StateFlow<List<Todo>> = getTodoUseCase()
 
-    fun addTodo(title: String) {
+    fun addTodo(title: String, category: String? = null) {
         viewModelScope.launch {
-            addTodoUseCase(title)
+            addTodoUseCase(title, category)
         }
     }
 
-    fun editTodo(id: Long, newTitle: String) {
+    fun editTodo(id: Long, newTitle: String, category: String? = null) {
         viewModelScope.launch {
-            editTodoUseCase(id, newTitle)
+            editTodoUseCase(id, newTitle, category)
         }
     }
 
