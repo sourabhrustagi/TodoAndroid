@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AppModule {
+abstract class TodoModule {
     @Binds
     @Singleton
     abstract fun bindTodoRepository(impl: InMemoryTodoRepository): TodoRepository

@@ -25,21 +25,26 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.todoandroid.viewmodel.AuthViewModel
+import com.example.todoandroid.viewmodel.LoginUiState
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
+    var loginState by remember { mutableStateOf(LoginUiState()) }
+
     Box(
         modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
     ) {
         Card(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(32.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
@@ -82,9 +87,9 @@ fun LoginScreen(
                     singleLine = true
                 )
 
-                if (errorMessage.isNotEmpty()) {
+                if (loginState.errorMessage != null) {
                     Text(
-                        text = errorMessage,
+                        text = loginState.errorMessage!!,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -94,24 +99,21 @@ fun LoginScreen(
                 Button(
                     onClick = {
                         if (email.isBlank() || password.isBlank()) {
-                            errorMessage = "Please fill in all fields"
+                            loginState = loginState.copy(errorMessage = "Please fill in all fields")
                         } else if (!isValidEmail(email)) {
-                            errorMessage = "Please enter a valid email"
+                            loginState =
+                                loginState.copy(errorMessage = "Please enter a valid email")
                         } else {
-                            isLoading = true
-                            errorMessage = ""
-                            if (email == "user@example.com" && password == "password") {
-                                onLoginSuccess()
-                            } else {
-                                errorMessage = "Invalid email or password"
-                                isLoading = false
+                            loginState = loginState.copy(errorMessage = null)
+                            authViewModel.login(email, password) { newState ->
+                                loginState = newState
                             }
                         }
                     }, modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp), enabled = !isLoading
+                        .height(48.dp), enabled = !loginState.isLoading
                 ) {
-                    if (isLoading) {
+                    if (loginState.isLoading) {
                         Text("Signing in...")
                     } else {
                         Text("Sign In")
@@ -131,5 +133,5 @@ fun LoginScreen(
 }
 
 private fun isValidEmail(email: String): Boolean {
-    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    return email.matches(Regex("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$"))
 }

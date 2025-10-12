@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
+import javax.inject.Singleton
 
 interface TodoRepository {
     val todos: StateFlow<List<Todo>>
@@ -16,6 +17,7 @@ interface TodoRepository {
     fun delete(id: Long)
 }
 
+@Singleton
 class InMemoryTodoRepository @Inject constructor() : TodoRepository {
     private val _todos = MutableStateFlow<List<Todo>>(emptyList())
     override val todos: StateFlow<List<Todo>> = _todos.asStateFlow()

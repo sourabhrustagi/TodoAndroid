@@ -3,6 +3,7 @@ package com.example.todoandroid.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,25 +60,27 @@ fun TodoScreen(
 
     Scaffold(
         topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Todo",
-                    style = MaterialTheme.typography.titleLarge
-                )
-                IconButton(
-                    onClick = onProfileClick
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = MaterialTheme.colorScheme.primary
+                    Text(
+                        text = "Todo",
+                        style = MaterialTheme.typography.titleLarge
                     )
+                    IconButton(
+                        onClick = onProfileClick
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         },
@@ -164,17 +167,25 @@ fun TodoList(
     modifier: Modifier = Modifier
 ) {
     if (items.isEmpty()) {
-        Text(
-            text = "No tasks yet",
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = modifier.padding(top = 16.dp)
-        )
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No tasks yet",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = modifier.padding(top = 16.dp)
+            )
+        }
         return
     }
-    LazyColumn(modifier = modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         items(items, key = { it.id }) { item ->
             TodoRow(item = item, onToggle = onToggle, onDelete = onDelete, onEdit = onEdit)
-            Divider()
         }
     }
 }
@@ -310,36 +321,6 @@ fun AddTaskDialog(
     )
 }
 
-@Composable
-fun DeleteConfirmationDialog(
-    todo: Todo,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text("Delete ")
-        },
-        text = {
-            Text("Are you sure you want to delete \"${todo.title}\"?")
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirm
-            ) {
-                Text("Delete")
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss
-            ) {
-                Text("Cancel")
-            }
-        }
-    )
-}
 
 @Composable
 fun EditTaskDialog(
@@ -383,6 +364,38 @@ fun EditTaskDialog(
                 enabled = taskText.isNotBlank()
             ) {
                 Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+
+@Composable
+fun DeleteConfirmationDialog(
+    todo: Todo,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Delete ")
+        },
+        text = {
+            Text("Are you sure you want to delete \"${todo.title}\"?")
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm
+            ) {
+                Text("Delete")
             }
         },
         dismissButton = {
