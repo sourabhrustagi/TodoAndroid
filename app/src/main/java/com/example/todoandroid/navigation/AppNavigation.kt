@@ -24,20 +24,20 @@ fun AppNavigation(
 
     NavHost(
         navController = navController,
-        startDestination = if (isLoggedIn) "main" else "login",
+        startDestination = if (isLoggedIn) "java" else "login",
         modifier = modifier
     ) {
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate("main") {
+                    navController.navigate("java") {
                         popUpTo("login") { inclusive = true }
                     }
                 }
             )
         }
 
-        composable("main") {
+        composable("java") {
             TodoScreen(
                 onProfileClick = {
                     navController.navigate("profile")

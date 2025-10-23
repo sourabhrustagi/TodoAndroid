@@ -1,8 +1,6 @@
 package com.example.todoandroid.di
 
-import com.example.todoandroid.config.AppConfig
 import com.example.todoandroid.data.api.service.AuthApiService
-import com.example.todoandroid.data.api.service.MockAuthService
 import com.example.todoandroid.data.repository.AuthRepository
 import com.example.todoandroid.data.repository.AuthRepositoryImpl
 import dagger.Binds
@@ -10,8 +8,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import okhttp3.OkHttpClient
-import java.util.concurrent.TimeUnit
+import retrofit2.Retrofit
 import javax.inject.Singleton
 
 @Module
@@ -23,25 +20,13 @@ abstract class AuthModule {
         authRepositoryImpl: AuthRepositoryImpl
     ): AuthRepository
 
-    companion object{
+    companion object {
         @Provides
         @Singleton
-        fun provideOkHttpClient(
-            appConfig: AppConfig
-        ): OkHttpClient{
-            val builder = OkHttpClient.Builder()
-                .connectTimeout(appConfig.apiTimeoutSeconds, TimeUnit.SECONDS)
-                .readTimeout(appConfig.apiTimeoutSeconds, TimeUnit.SECONDS)
-                .writeTimeout(appConfig.apiTimeoutSeconds, TimeUnit.SECONDS)
-            if (appConfig.useMockInterceptor){
-                builder.addInterceptor (MockLoginInterceptor())
-            }
+        fun provideAuthApiService(
+            retrofit: Retrofit
+        ): AuthApiService {
+            return retrofit.create(AuthApiService::class.java)
         }
     }
-    @Binds
-    @Singleton
-    abstract fun bindAuthApiService(
-        mockAuthService: MockAuthService
-    ): AuthApiService
-
 }

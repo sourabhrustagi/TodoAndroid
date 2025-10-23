@@ -1,24 +1,18 @@
 package com.example.todoandroid.data.api.model
 
-import com.google.gson.annotations.SerializedName
+import com.fasterxml.jackson.annotation.JsonProperty
+
 
 data class LoginResponse(
-    @SerializedName("success")
-    val success: Boolean,
-    @SerializedName("message")
-    val message: String,
-    @SerializedName("token")
-    val token: String? = null,
-    @SerializedName("user")
-    val user: User? = null
+    @JsonProperty("success") val success: Boolean,
+    @JsonProperty("message") val message: String,
+    @JsonProperty("token") val token: String? = null,
+    @JsonProperty("user") val user: User? = null
 )
 
 data class User(
-    @SerializedName("id")
-    val id: String,
-    @SerializedName("email")
-    val email: String,
-    @SerializedName("name")
-    val name: String
+    @JsonProperty("id") val id: String,
+    @JsonProperty("email") val email: String,
+    @JsonProperty("name") val name: String
 )
 
